@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler')
+const Goal = require('../models/goalModel')
 
 // @desc    Set goal
 // @route   POST /api/goals
@@ -10,28 +11,61 @@ const setGoal = asyncHandler( async (req, res) => {
         throw new Error("Please add a text field")
     }
 
-    res.json({ message: "Set goal" }).status(200)
+    // req.body.text = goal from user
+    const goal = await Goal.create({
+        text: req.body.text,
+    })
+    res.json(goal).status(200)
 })
 
 // @desc    Get goals
 // @route   GET /api/goals
 // @access  private
 const getGoals = asyncHandler( async (req, res) => {
-    res.json({ message: "Get goals" }).status(200)
+    const goals = await Goal.find()
+    res.json(goals).status(200)
 })
 
 // @desc    Update goal
 // @route   PUT /api/goals/:id
 // @access  private
 const updateGoal = asyncHandler( async (req, res) => {
-    res.json({ message: `Update goal ${req.params.id}`}).status(200)
+    // 1. find a goal by id
+    const goal = await Goal.findById(req.params.id)
+
+    // 2. check if not present, throw an error
+    if(!goal) {
+        res.status(400)
+        throw new Error('Goal not found')
+    }
+
+    // 3. update goal
+    const updatedGoal = await Goal.findByIdAndUpdate(req.params.id, req.body, {
+        new: true
+    })
+
+    res.json(updatedGoal).status(200)
 })
 
 // @desc    Delete goal
 // @route   DELETE /api/goals/:id
 // @access  private
 const deleteGoal = asyncHandler( async (req, res) => {
-    res.json({ message: `Delete goal ${req.params.id}`}).status(200)
+    // 1. find a goal by Id
+    const goal = await Goal.findById(req.params.id)
+
+    // 2. if not present, throw error
+    if (!goal) {
+        res.status(400)
+        throw new Error('Goal not found')
+    }
+    // 3. delete goal
+    await Goal.remove()
+
+    // const deletedGoal = await Goal.findByIdAndDelete(req.params.id)
+    // res.json(deletedGoal).status(200)
+
+    res.json({ message: `Delete goal ID: ${req.params.id}` }).status(200)
 })
 
 module.exports = { 
